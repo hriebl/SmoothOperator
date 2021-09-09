@@ -174,7 +174,7 @@ and fit it with the `optim()` function from R:
 nbeta <- ncol(mat$design_matrix)
 param <- c(0, rep(0, nbeta), 0, 0)
 
-loss <- function(param, y, X, K) {
+loss <- function(param, y, X, K, rk) {
   nbeta <- ncol(X)
 
   beta0 <- param[1]
@@ -185,7 +185,7 @@ loss <- function(param, y, X, K) {
   mu <- beta0 + drop(X %*% beta)
 
   loglik <- sum(dnorm(y, mu, sigma, log = TRUE))
-  penalty <- lambda * drop(beta %*% K %*% beta)
+  penalty <- lambda * drop(beta %*% K %*% beta) - rk / 2 * log(lambda)
 
   -loglik + penalty
 }
@@ -196,6 +196,7 @@ opt <- optim(
   y = lidar$logratio,
   X = mat$design_matrix,
   K = mat$penalty_matrices[[1]],
+  rk = mat$ranks[[1]],
   method = "BFGS"
 )
 ```
@@ -214,8 +215,25 @@ mu <- beta0 + drop(mat$design_matrix %*% beta)
 ggplot(lidar, aes(range, logratio)) +
   geom_point(color = "gray") +
   geom_line(y = mu) +
-  ggtitle("Fitted cubic regression spline") +
+  ggtitle("Fitted cubic regression spline (penalized)") +
   theme_minimal()
 ```
 
 <img src="man/figures/README-lidar-fit-1.png" width="100%" />
+
+For comparison, the red line shows how the unpenalized smooth would look
+like:
+
+``` r
+mod <- lm(lidar$logratio ~ mat$design_matrix)
+mu2 <- fitted(mod)
+
+ggplot(lidar, aes(range, logratio)) +
+  geom_point(color = "gray") +
+  geom_line(y = mu) +
+  geom_line(y = mu2, color = "red") +
+  ggtitle("Fitted cubic regression spline (penalized and unpenalized)") +
+  theme_minimal()
+```
+
+<img src="man/figures/README-lidar-lm-1.png" width="100%" />
