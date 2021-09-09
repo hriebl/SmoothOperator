@@ -58,7 +58,8 @@ Defaults to \code{FALSE}.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{Smooth$new()}}
-\item \href{#method-add_knots}{\code{Smooth$add_knots()}}
+\item \href{#method-initialize_knots}{\code{Smooth$initialize_knots()}}
+\item \href{#method-initialize_constraints}{\code{Smooth$initialize_constraints()}}
 \item \href{#method-add_centering_constraint}{\code{Smooth$add_centering_constraint()}}
 \item \href{#method-add_point_constraints}{\code{Smooth$add_point_constraints()}}
 \item \href{#method-remove_all_constraints}{\code{Smooth$remove_all_constraints()}}
@@ -92,12 +93,22 @@ Defaults to 10.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-add_knots"></a>}}
-\if{latex}{\out{\hypertarget{method-add_knots}{}}}
-\subsection{Method \code{add_knots()}}{
-Add explicit knots using mgcv's basis-specific method.
+\if{html}{\out{<a id="method-initialize_knots"></a>}}
+\if{latex}{\out{\hypertarget{method-initialize_knots}{}}}
+\subsection{Method \code{initialize_knots()}}{
+Initialize knots using mgcv's basis-specific method.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Smooth$add_knots()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Smooth$initialize_knots()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-initialize_constraints"></a>}}
+\if{latex}{\out{\hypertarget{method-initialize_constraints}{}}}
+\subsection{Method \code{initialize_constraints()}}{
+Initialize constraints with a centering constraint.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Smooth$initialize_constraints()}\if{html}{\out{</div>}}
 }
 
 }
@@ -105,7 +116,7 @@ Add explicit knots using mgcv's basis-specific method.
 \if{html}{\out{<a id="method-add_centering_constraint"></a>}}
 \if{latex}{\out{\hypertarget{method-add_centering_constraint}{}}}
 \subsection{Method \code{add_centering_constraint()}}{
-Add an explicit centering constraint.
+Add a centering constraint.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Smooth$add_centering_constraint()}\if{html}{\out{</div>}}
 }

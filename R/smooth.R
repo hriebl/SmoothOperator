@@ -85,8 +85,8 @@ Smooth <- R6Class(
     },
 
     #' @description
-    #' Add explicit knots using mgcv's basis-specific method.
-    add_knots = function() {
+    #' Initialize knots using mgcv's basis-specific method.
+    initialize_knots = function() {
       smooth <- private$s()
 
       smooth <- smooth.construct(smooth, self$data, knots = NULL)
@@ -121,10 +121,18 @@ Smooth <- R6Class(
     },
 
     #' @description
-    #' Add an explicit centering constraint.
+    #' Initialize constraints with a centering constraint.
+    initialize_constraints = function() {
+      self$remove_all_constraints()
+      self$add_centering_constraint()
+      invisible(self)
+    },
+
+    #' @description
+    #' Add a centering constraint.
     add_centering_constraint = function() {
       if (is.null(self$constraints)) {
-        private$initialize_constraints()
+        self$remove_all_constraints()
       }
 
       smooth <- private$s()
@@ -141,7 +149,7 @@ Smooth <- R6Class(
     #'             smooth should pass through zero.
     add_point_constraints = function(data) {
       if (is.null(self$constraints)) {
-        private$initialize_constraints()
+        self$initialize_constraints()
       }
 
       smooth <- private$s()
@@ -155,7 +163,13 @@ Smooth <- R6Class(
     #' @description
     #' Remove all constraints (including the centering constraint).
     remove_all_constraints = function() {
-      private$initialize_constraints()
+      width <- self$k
+
+      if (self$bs == "cc") {
+        width <- width - 1
+      }
+
+      self$constraints <- matrix(nrow = 0, ncol = width)
       invisible(self)
     },
 
@@ -170,11 +184,11 @@ Smooth <- R6Class(
         data <- self$data
       } else {
         if (is.null(self$knots)) {
-          self$add_knots()
+          self$initialize_knots()
         }
 
         if (is.null(self$constraints)) {
-          self$add_centering_constraint()
+          self$initialize_constraints()
         }
       }
 
@@ -211,16 +225,6 @@ Smooth <- R6Class(
       }
 
       self$constraints <- new_matrix
-      invisible(self)
-    },
-    initialize_constraints = function() {
-      width <- self$k
-
-      if (self$bs == "cc") {
-        width <- width - 1
-      }
-
-      self$constraints <- matrix(nrow = 0, ncol = width)
       invisible(self)
     },
     s = function() {

@@ -38,7 +38,6 @@ smt
 #>   Public:
 #>     absorb_constraints: TRUE
 #>     add_centering_constraint: function () 
-#>     add_knots: function () 
 #>     add_point_constraints: function (data) 
 #>     bs: cr
 #>     clone: function (deep = FALSE) 
@@ -47,6 +46,8 @@ smt
 #>     data: data.frame
 #>     identity_penalty: FALSE
 #>     initialize: function (terms, data, bs = "tp", k = 10) 
+#>     initialize_constraints: function () 
+#>     initialize_knots: function () 
 #>     k: 10
 #>     knots: NULL
 #>     m: NA
@@ -56,7 +57,6 @@ smt
 #>     xt: NULL
 #>   Private:
 #>     add_constraints: function (new) 
-#>     initialize_constraints: function () 
 #>     s: function ()
 
 mat <- smt$construct()
@@ -68,10 +68,10 @@ str(mat)
 #>  $ ranks           : num 8
 ```
 
-Add and inspect knots and constraints:
+Initialize and inspect knots and constraints:
 
 ``` r
-smt$add_knots()
+smt$initialize_knots()
 smt$knots
 #>             x
 #> 1  0.02522857
@@ -85,14 +85,16 @@ smt$knots
 #> 9  0.94763002
 #> 10 0.99971561
 
-smt$add_centering_constraint()
+# adds an explicit centering constraint
+smt$initialize_constraints()
 smt$constraints
 #>            [,1]      [,2]      [,3]       [,4]      [,5]      [,6]      [,7]
 #> [1,] 0.04813571 0.1139502 0.1262563 0.09708947 0.1047601 0.1184304 0.1267345
 #>            [,8]     [,9]      [,10]
 #> [1,] 0.08647797 0.124193 0.05397238
 
-smt$add_point_constraints(data.frame(x = 0.5))
+pc <- data.frame(x = 0.5)
+smt$add_point_constraints(pc)
 smt$constraints
 #>             [,1]         [,2]       [,3]        [,4]      [,5]      [,6]
 #> [1,] 0.048135705  0.113950156 0.12625629  0.09708947 0.1047601 0.1184304

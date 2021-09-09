@@ -10,10 +10,10 @@ for (bs in supported) {
   smt <- Smooth$new("x", df, bs, k)
   x1 <- smt$construct()
 
-  smt$add_knots()
+  smt$initialize_knots()
   x2 <- smt$construct()
 
-  test_that(paste(prefix, "Adding knots works"), {
+  test_that(paste(prefix, "Initializing knots works"), {
     expect_true(is.data.frame(smt$knots))
     expect_equal(names(smt$knots), "x")
 
@@ -22,10 +22,10 @@ for (bs in supported) {
     expect_equal(x2$ranks, x1$ranks)
   })
 
-  smt$add_centering_constraint()
+  smt$initialize_constraints()
   x2 <- smt$construct()
 
-  test_that(paste(prefix, "Adding centering constraint works"), {
+  test_that(paste(prefix, "Initializing constraints works"), {
     expect_true(is.matrix(smt$constraints))
     expect_equal(nrow(smt$constraints), 1)
 
@@ -34,7 +34,8 @@ for (bs in supported) {
     expect_equal(x2$ranks, x1$ranks)
   })
 
-  smt$add_point_constraints(data.frame(x = 0.5))
+  pc <- data.frame(x = 0.5)
+  smt$add_point_constraints(pc)
   x2 <- smt$construct()
 
   test_that(paste(prefix, "Adding point constraint works"), {

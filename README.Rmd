@@ -47,15 +47,17 @@ mat <- smt$construct()
 str(mat)
 ```
 
-Add and inspect knots and constraints:
+Initialize and inspect knots and constraints:
 
 ```{r example2}
-smt$add_knots()
+smt$initialize_knots()
 smt$knots
 
-smt$add_centering_constraint()
+# adds an explicit centering constraint
+smt$initialize_constraints()
 smt$constraints
 
-smt$add_point_constraints(data.frame(x = 0.5))
+pc <- data.frame(x = 0.5)
+smt$add_point_constraints(pc)
 smt$constraints
 ```
