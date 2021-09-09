@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# SmoothOperator
+# SmoothOperator <img src="man/figures/logo.png" align="right" width="150">
 
 <!-- badges: start -->
 
@@ -103,3 +103,119 @@ smt$constraints
 #> [1,]  0.12673449 0.08647797  0.124193020 0.053972380
 #> [2,] -0.04534949 0.01541751 -0.005727267 0.001865725
 ```
+
+### Fitting a penalized cubic regression spline
+
+Now, let’s use SmoothOperator to fit a penalized cubic regression spline
+to the `lidar` dataset from the SemiPar package, a classic dataset for
+non-parametric regression. See also `?SemiPar::lidar`. This example
+shows how easy it is to set up a smooth with SmoothOperator and use it
+with a self-defined model.
+
+``` r
+library(ggplot2)
+library(SemiPar)
+data(lidar)
+
+ggplot(lidar, aes(range, logratio)) +
+  geom_point(color = "gray") +
+  ggtitle("SemiPar::lidar dataset") +
+  theme_minimal()
+```
+
+<img src="man/figures/README-lidar-data-1.png" width="100%" />
+
+First, we set up the smooth and initialize the knots. As an
+illustration, we add some random noise to the knots, just because we
+can. Of course, it’s also possible to adjust the knots in a more
+meaningful way. Finally, we construct the design and the penalty matrix.
+
+``` r
+smt <- Smooth$new("range", lidar, bs = "cr", k = 10)
+smt$initialize_knots()
+smt$knots
+#>       range
+#> 1  390.0000
+#> 2  426.4444
+#> 3  462.8889
+#> 4  499.6667
+#> 5  536.5556
+#> 6  573.2222
+#> 7  609.6667
+#> 8  646.2222
+#> 9  683.1111
+#> 10 720.0000
+
+smt$knots <- smt$knots + rnorm(10)
+smt$knots
+#>       range
+#> 1  389.9635
+#> 2  427.5624
+#> 3  462.1888
+#> 4  498.5426
+#> 5  535.9425
+#> 6  574.2347
+#> 7  607.3228
+#> 8  646.8125
+#> 9  683.4302
+#> 10 720.7016
+
+mat <- smt$construct()
+dim(mat$design_matrix)
+#> [1] 221   9
+dim(mat$penalty_matrices[[1]])
+#> [1] 9 9
+```
+
+Here, we define the loss function of the non-parametric regression model
+and fit it with the `optim()` function from R:
+
+``` r
+nbeta <- ncol(mat$design_matrix)
+param <- c(0, rep(0, nbeta), 0, 0)
+
+loss <- function(param, y, X, K) {
+  nbeta <- ncol(X)
+
+  beta0 <- param[1]
+  beta <- param[2:(nbeta + 1)]
+  lambda <- exp(param[nbeta + 2])
+  sigma <- exp(param[nbeta + 3])
+
+  mu <- beta0 + drop(X %*% beta)
+
+  loglik <- sum(dnorm(y, mu, sigma, log = TRUE))
+  penalty <- lambda * drop(beta %*% K %*% beta)
+
+  -loglik + penalty
+}
+
+opt <- optim(
+  par = param,
+  fn = loss,
+  y = lidar$logratio,
+  X = mat$design_matrix,
+  K = mat$penalty_matrices[[1]],
+  method = "BFGS"
+)
+```
+
+Finally, we plot the fit to confirm that it is reasonable and that the
+penalization worked.
+
+``` r
+param <- opt$par
+
+beta0 <- param[1]
+beta <- param[2:(nbeta + 1)]
+
+mu <- beta0 + drop(mat$design_matrix %*% beta)
+
+ggplot(lidar, aes(range, logratio)) +
+  geom_point(color = "gray") +
+  geom_line(y = mu) +
+  ggtitle("Fitted cubic regression spline") +
+  theme_minimal()
+```
+
+<img src="man/figures/README-lidar-fit-1.png" width="100%" />
