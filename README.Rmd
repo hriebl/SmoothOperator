@@ -1,0 +1,61 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# SmoothOperator
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+> Easy Feature Engineering with mgcv Penalized Spline Smooths
+
+A convenient API for working with penalized spline smooths, based on the mgcv package. The smooths can easily be integrated with user-defined models and algorithms.
+
+## Installation
+
+You can install the development version of SmoothOperator from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("hriebl/SmoothOperator")
+```
+
+## Example
+
+Define and construct a simple cubic regression spline:
+
+```{r example1}
+library(SmoothOperator)
+set.seed(1337)
+
+df <- data.frame(x = runif(100))
+smt <- Smooth$new("x", df, bs = "cr", k = 10)
+smt
+
+mat <- smt$construct()
+str(mat)
+```
+
+Add and inspect knots and constraints:
+
+```{r example2}
+smt$add_knots()
+smt$knots
+
+smt$add_centering_constraint()
+smt$constraints
+
+smt$add_point_constraints(data.frame(x = 0.5))
+smt$constraints
+```
