@@ -110,7 +110,7 @@ Now, let’s use SmoothOperator to fit a penalized cubic regression spline
 to the `lidar` dataset from the SemiPar package, a classic dataset for
 non-parametric regression. See also `?SemiPar::lidar`. This example
 shows how easy it is to set up a smooth with SmoothOperator and use it
-with a self-defined model.
+in a self-defined model.
 
 ``` r
 library(ggplot2)
@@ -127,8 +127,8 @@ ggplot(lidar, aes(range, logratio)) +
 
 First, we set up the smooth and initialize the knots. As an
 illustration, we add some random noise to the knots, just because we
-can. Of course, it’s also possible to adjust the knots in a more
-meaningful way. Finally, we construct the design and the penalty matrix.
+can. In practice, you will want to adjust the knots in a more meaningful
+way. Finally, we construct the design and the penalty matrix.
 
 ``` r
 smt <- Smooth$new("range", lidar, bs = "cr", k = 10)
@@ -167,14 +167,15 @@ dim(mat$penalty_matrices[[1]])
 #> [1] 9 9
 ```
 
-Here, we define the loss function of the non-parametric regression model
-and fit it with the `optim()` function from R:
+Here, we define the log-posterior of the non-parametric regression model
+and determine the maximum a posteriori (MAP) estimate with the `optim()`
+function from R:
 
 ``` r
 nbeta <- ncol(mat$design_matrix)
 param <- c(0, rep(0, nbeta), 0, 0)
 
-loss <- function(param, y, X, K, rk) {
+logpost <- function(param, y, X, K, rk) {
   nbeta <- ncol(X)
 
   beta0 <- param[1]
@@ -185,55 +186,44 @@ loss <- function(param, y, X, K, rk) {
   mu <- beta0 + drop(X %*% beta)
 
   loglik <- sum(dnorm(y, mu, sigma, log = TRUE))
-  penalty <- lambda * drop(beta %*% K %*% beta) - rk / 2 * log(lambda)
+  logprior <- rk / 2 * log(lambda) - lambda * drop(beta %*% K %*% beta)
 
-  -loglik + penalty
+  loglik + logprior
 }
 
-opt <- optim(
+map <- optim(
   par = param,
-  fn = loss,
+  fn = logpost,
   y = lidar$logratio,
   X = mat$design_matrix,
   K = mat$penalty_matrices[[1]],
   rk = mat$ranks[[1]],
-  method = "BFGS"
+  method = "BFGS",
+  control = list(fnscale = -1)
 )
 ```
 
-Finally, we plot the fit to confirm that it is reasonable and that the
-penalization worked.
+Finally, we plot the fit to confirm that it looks reasonable. The red
+line shows the unpenalized smooth for comparison, which certainly is
+more wiggly than the penalized version.
 
 ``` r
-param <- opt$par
+param <- map$par
 
 beta0 <- param[1]
 beta <- param[2:(nbeta + 1)]
 
-mu <- beta0 + drop(mat$design_matrix %*% beta)
+mu1 <- beta0 + drop(mat$design_matrix %*% beta)
 
-ggplot(lidar, aes(range, logratio)) +
-  geom_point(color = "gray") +
-  geom_line(y = mu) +
-  ggtitle("Fitted cubic regression spline (penalized)") +
-  theme_minimal()
-```
-
-<img src="man/figures/README-lidar-fit-1.png" width="100%" />
-
-For comparison, the red line shows how the unpenalized smooth would look
-like:
-
-``` r
 mod <- lm(lidar$logratio ~ mat$design_matrix)
 mu2 <- fitted(mod)
 
 ggplot(lidar, aes(range, logratio)) +
   geom_point(color = "gray") +
-  geom_line(y = mu) +
   geom_line(y = mu2, color = "red") +
+  geom_line(y = mu1) +
   ggtitle("Fitted cubic regression spline (penalized and unpenalized)") +
   theme_minimal()
 ```
 
-<img src="man/figures/README-lidar-lm-1.png" width="100%" />
+<img src="man/figures/README-lidar-fit-1.png" width="100%" />
